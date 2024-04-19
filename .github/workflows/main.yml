@@ -34,10 +34,10 @@ jobs:
     - name: Generate IPA - Debug
       run: |
         cd ios
-        xcodebuild -workspace ReactNativeCI.xcworkspace -scheme YourScheme -configuration Debug -archivePath build/YourApp-debug.xcarchive archive
-        xcodebuild -exportArchive -archivePath build/YourApp-debug.xcarchive -exportOptionsPlist exportOptions.plist -exportPath build
+        xcodebuild -workspace ReactNativeCI.xcworkspace -scheme ReactNativeCI -configuration Debug -archivePath build/ReactNativeCI-debug.xcarchive archive
+        xcodebuild -exportArchive -archivePath build/ReactNativeCI-debug.xcarchive -exportOptionsPlist exportOptions.plist -exportPath build
       env:
-        APP_NAME: YourAppName
+        APP_NAME: ReactNativeCIName
 
     - name: Archive IPA - Debug
       uses: actions/upload-artifact@v2
@@ -55,10 +55,10 @@ jobs:
     - name: Generate IPA - Release
       run: |
         cd ios
-        xcodebuild -workspace ReactNativeCI.xcworkspace -scheme YourScheme -configuration Release -archivePath build/YourApp-release.xcarchive archive
-        xcodebuild -exportArchive -archivePath build/YourApp-release.xcarchive -exportOptionsPlist exportOptions.plist -exportPath build
+        xcodebuild -workspace ReactNativeCI.xcworkspace -scheme ReactNativeCI -configuration Release -archivePath build/ReactNativeCI-release.xcarchive archive
+        xcodebuild -exportArchive -archivePath build/ReactNativeCI-release.xcarchive -exportOptionsPlist exportOptions.plist -exportPath build
       env:
-        APP_NAME: YourAppName
+        APP_NAME: ReactNativeCIName
 
     - name: Archive IPA - Release
       uses: actions/upload-artifact@v2
