@@ -2,6 +2,8 @@ name: Build iOS App and Generate IPA
 
 on:
   push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -22,23 +24,44 @@ jobs:
         npm install
         npm install -g react-native-cli
 
-    - name: Build iOS App
+    - name: Build iOS App - Debug
       run: |
         cd ios
         pod install
         cd ..
-        react-native run-ios --configuration=release --device
+        react-native run-ios --configuration=Debug --device
 
-    - name: Generate IPA
+    - name: Generate IPA - Debug
       run: |
         cd ios
-        xcodebuild -workspace ReactNativeCI.xcworkspace -scheme ReactNativeCI -configuration Release -archivePath build/ReactNativeCI.xcarchive archive
-        xcodebuild -exportArchive -archivePath build/ReactNativeCI.xcarchive -exportOptionsPlist exportOptions.plist -exportPath build
+        xcodebuild -workspace ReactNativeCI.xcworkspace -scheme YourScheme -configuration Debug -archivePath build/YourApp-debug.xcarchive archive
+        xcodebuild -exportArchive -archivePath build/YourApp-debug.xcarchive -exportOptionsPlist exportOptions.plist -exportPath build
       env:
-        APP_NAME: ReactNativeCI
+        APP_NAME: YourAppName
 
-    - name: Archive IPA
+    - name: Archive IPA - Debug
       uses: actions/upload-artifact@v2
       with:
-        name: ios-ipa
+        name: ios-ipa-debug
+        path: ios/build/*.ipa
+
+    - name: Build iOS App - Release
+      run: |
+        cd ios
+        pod install
+        cd ..
+        react-native run-ios --configuration=Release --device
+
+    - name: Generate IPA - Release
+      run: |
+        cd ios
+        xcodebuild -workspace ReactNativeCI.xcworkspace -scheme YourScheme -configuration Release -archivePath build/YourApp-release.xcarchive archive
+        xcodebuild -exportArchive -archivePath build/YourApp-release.xcarchive -exportOptionsPlist exportOptions.plist -exportPath build
+      env:
+        APP_NAME: YourAppName
+
+    - name: Archive IPA - Release
+      uses: actions/upload-artifact@v2
+      with:
+        name: ios-ipa-release
         path: ios/build/*.ipa
