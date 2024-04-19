@@ -1,94 +1,44 @@
-name: Build Android and iOS App
+name: Build iOS App and Generate IPA
 
 on:
   push:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set current date as env variable
-        run: echo "date_today=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-
-      - name: Set repository name as env variable
-        run: echo "repository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
-
-      - name: Setup JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: '11'
-
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
-
-      - name: Install dependencies
-        run: yarn install
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
-
-      - name: Build Android APK
-        run: |
-          cd android
-          ./gradlew assembleRelease
-
-      - name: Build Android AAB
-        run: |
-          cd android
-          ./gradlew bundleRelease
-
-      - name: Upload APK Release - ${{ env.repository_name }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ env.date_today }} - ${{ env.repository_name }} - APK(s) release generated
-          path: android/app/build/outputs/apk/release/
-
-      - name: Upload AAB (App Bundle) Release - ${{ env.repository_name }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ env.date_today }} - ${{ env.repository_name }} - App bundle(s) AAB release generated
-          path: android/app/build/outputs/bundle/release/
-
-  build-ios:
-    needs: build
+    name: Build
     runs-on: macos-latest
-
+    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v2
 
-      - name: Install Xcode
-        uses: actions/setup-xcode@v2
-        with:
-          xcode-version: '13.2.1' # Update with your desired Xcode version
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
 
-      - name: Install CocoaPods
-        run: sudo gem install cocoapods
+    - name: Install Dependencies
+      run: |
+        npm install
+        npm install -g react-native-cli
 
-      - name: Install iOS dependencies
-        run: |
-          cd ios
-          pod install
+    - name: Build iOS App
+      run: |
+        cd ios
+        pod install
+        cd ..
+        react-native run-ios --configuration=release --device
 
-      # Add steps here to build your iOS app using xcodebuild or similar tools
+    - name: Generate IPA
+      run: |
+        cd ios
+        xcodebuild -workspace ReactNativeCI.xcworkspace -scheme ReactNativeCI -configuration Release -archivePath build/ReactNativeCI.xcarchive archive
+        xcodebuild -exportArchive -archivePath build/ReactNativeCI.xcarchive -exportOptionsPlist exportOptions.plist -exportPath build
+      env:
+        APP_NAME: ReactNativeCI
 
-      # Add steps to upload artifacts
-      - name: Archive iOS App
-        run: |
-          xcodebuild archive -workspace YourApp.xcworkspace -scheme YourScheme -archivePath build/YourApp.xcarchive
-      - name: Export IPA
-        run: |
-          xcodebuild -exportArchive -archivePath build/YourApp.xcarchive -exportPath build -exportOptionsPlist ExportOptions.plist
-
-      - name: Upload IPA Release - ${{ env.repository_name }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ env.date_today }} - ${{ env.repository_name }} - IPA release generated
-          path: build/YourApp.ipa
+    - name: Archive IPA
+      uses: actions/upload-artifact@v2
+      with:
+        name: ios-ipa
+        path: ios/build/*.ipa
