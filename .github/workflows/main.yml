@@ -1,4 +1,4 @@
-name: Build Android App1
+name: Build Android and iOS App
 
 on:
   push:
@@ -55,3 +55,40 @@ jobs:
         with:
           name: ${{ env.date_today }} - ${{ env.repository_name }} - App bundle(s) AAB release generated
           path: android/app/build/outputs/bundle/release/
+
+  build-ios:
+    needs: build
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Xcode
+        uses: actions/setup-xcode@v2
+        with:
+          xcode-version: '13.2.1' # Update with your desired Xcode version
+
+      - name: Install CocoaPods
+        run: sudo gem install cocoapods
+
+      - name: Install iOS dependencies
+        run: |
+          cd ios
+          pod install
+
+      # Add steps here to build your iOS app using xcodebuild or similar tools
+
+      # Add steps to upload artifacts
+      - name: Archive iOS App
+        run: |
+          xcodebuild archive -workspace YourApp.xcworkspace -scheme YourScheme -archivePath build/YourApp.xcarchive
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive -archivePath build/YourApp.xcarchive -exportPath build -exportOptionsPlist ExportOptions.plist
+
+      - name: Upload IPA Release - ${{ env.repository_name }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.date_today }} - ${{ env.repository_name }} - IPA release generated
+          path: build/YourApp.ipa
